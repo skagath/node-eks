@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-init-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        command:
+          - "sh"
+          - "-c"
+          - |
+            echo "Waiting for MySQL to be ready...";
+            until mysql -h mysql-service -u root -prootpassword -e 'select 1'; do
+              echo "MySQL not ready, waiting...";
+              sleep 10; # Retry every 10 seconds
+            done;
+            echo "Initializing database...";
+            mysql -h mysql-service -u root -prootpassword < /scripts/init-db.sql
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "rootpassword"
+        volumeMounts:
+          - name: init-db-scripts
+            mountPath: /scripts
+      restartPolicy: OnFailure
+      volumes:
+        - name: init-db-scripts
+          configMap:
+            name: init-db-scripts
+
