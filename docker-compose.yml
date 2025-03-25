@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: node-app
+    ports:
+      - "3000:3000"
+    environment:
+      - APP_PORT=3000
+      - DB_HOST=mysql-db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=node_app
+    depends_on:
+      - mysql-db
+    restart: always
+
+  mysql-db:
+    image: mysql:5.7
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: node_app
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql  # Mount the initialization SQL script
+
+volumes:
+  mysql_data:
+networks:
+  backend:
+    driver: bridge
+
